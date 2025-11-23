@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Enemy
   - NPC
+  - Boss
   layers:
   - Default
   - TransparentFX
@@ -16,8 +17,8 @@ TagManager:
   - Player
   - Enemy
   - Enviroment
-  - 
-  - 
+  - Boss
+  - TriggerZone
   - 
   - 
   - 
@@ -54,4 +55,10 @@ TagManager:
     locked: 0
   - name: Foreground
     uniqueID: 1954490881
+    locked: 0
+  - name: UI
+    uniqueID: 1187678805
+    locked: 0
+  - name: Boss
+    uniqueID: 423014213
     locked: 0

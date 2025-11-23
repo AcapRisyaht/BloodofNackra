@@ -11,6 +11,7 @@ CrashReports/
 
 # Visual Studio / VS Code
 .vscode/
+.vs/
 *.csproj
 *.unityproj
 *.sln
