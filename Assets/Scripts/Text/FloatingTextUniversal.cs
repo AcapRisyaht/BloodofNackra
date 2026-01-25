@@ -34,9 +34,7 @@ public class FloatingTextUniversal : MonoBehaviour
 
         text.text = amount.ToString();
         text.color = Color.red;
-        Debug.Log("Warna damage text ditetapkan ke: " + text.color);
         
-
         StartCoroutine(FadeOutAndMove());
     }
 

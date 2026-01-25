@@ -15,4 +15,5 @@ public class PlayerControls1 : MonoBehaviour
         Vector2 movement = new Vector2(moveX, moveY).normalized;
         transform.Translate(movement * moveSpeed * Time.deltaTime);
     }
+    
 }

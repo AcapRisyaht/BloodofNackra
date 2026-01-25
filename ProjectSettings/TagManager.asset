@@ -62,3 +62,9 @@ TagManager:
   - name: Boss
     uniqueID: 423014213
     locked: 0
+  - name: Geliga
+    uniqueID: 2988970015
+    locked: 0
+  - name: NPC
+    uniqueID: 3824830943
+    locked: 0

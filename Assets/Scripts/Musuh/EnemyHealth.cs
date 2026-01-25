@@ -28,7 +28,6 @@ public class EnemyHealth : MonoBehaviour
         barClone.transform.localPosition = new Vector3(0, 2f, 0.1f); // Letak bar di atas musuh
 
         nyawaSlider = barClone.GetComponentInChildren<Slider>();
-        Debug.Log("Slider dijumpai? " + (nyawaSlider != null));
         nyawaSlider.maxValue = maxHealth;
         nyawaSlider.value = currentHealth;
         SetHealth(1f); // Bar nyawa penuh
@@ -67,7 +66,6 @@ public class EnemyHealth : MonoBehaviour
 
     void ShowFloatingText(int amount, Transform spawnPoint)
     {
-        Debug.Log("ShowFloatingText dipanggil untuk: " + gameObject.name);
         if (Camera.main == null || canvasTransform == null || textSpawnPoint == null)
             return;
 
@@ -78,14 +76,10 @@ public class EnemyHealth : MonoBehaviour
 
         GameObject go = Instantiate(FloatingTextUniversal, Vector3.zero, Quaternion.identity, canvasTransform);
         go.GetComponent<RectTransform>().position = Camera.main.WorldToScreenPoint(spawnPosition);
-        Debug.Log("Prefab; " + FloatingTextUniversal.name);
-        Debug.Log("CanvasTransform: " + canvasTransform.name);
-        Debug.Log("SpawnPaosition: " + spawnPosition);
 
         FloatingTextUniversal ft = go.GetComponent<FloatingTextUniversal>();
         if (ft != null)
             ft.ShowDamage(amount, textSpawnPoint);
-        Debug.Log("Damage text muncul di: " + spawnPosition);
     }
 
     public void SetHealth(float HealthPercent)
@@ -95,8 +89,6 @@ public class EnemyHealth : MonoBehaviour
         {
             nyawaSlider.maxValue = maxHealth;
             nyawaSlider.value = currentHealth;
-            Debug.Log("SetHealth dipanggil.HealthPercent: " + HealthPercent + ",  value: " + nyawaSlider.value);
-            Debug.Log("Slider value sekarang: " + nyawaSlider.value + " / " + nyawaSlider.maxValue);
         }
     }
 

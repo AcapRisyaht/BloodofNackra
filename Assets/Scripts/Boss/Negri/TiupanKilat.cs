@@ -2,26 +2,32 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// TiupanKilat — Serangan boss jenis AoE.
+/// Guard: Kawal damage + stun pada player.
+/// </summary>
 public class TiupanKilat : MonoBehaviour, IBossAttack
 {
-   public Transform arahHadapan;
-   public int damagePerTick = 10;
-   public float tickInterval = 0.2f;
-   public float totalDuration = 1f;
-   public float radius = 2f;
-   public float stunDuration = 1.5f;
-   public LayerMask playerLayer;
+    public Transform arahHadapan;
+    public int damagePerTick = 10;
+    public float tickInterval = 0.2f;
+    public float totalDuration = 1f;
+    public float radius = 2f;
+    public float stunDuration = 1.5f;
+    public LayerMask playerLayer;
 
-   public void SetArah(Transform arah)
-   {
-       arahHadapan = arah;
-   }
+    private bool hasAppliedStun = false;
 
-   void Start()
-   {
-      StartCoroutine(KilatMerebak());
-       Destroy(gameObject, totalDuration + 0.2f); 
-   }
+    public void SetArah(Transform arah)
+    {
+        arahHadapan = arah;
+    }
+
+    void Start()
+    {
+        StartCoroutine(KilatMerebak());
+        Destroy(gameObject, totalDuration + 0.2f);
+    }
 
     IEnumerator KilatMerebak()
     {
@@ -30,34 +36,28 @@ public class TiupanKilat : MonoBehaviour, IBossAttack
         while (elapsed < totalDuration)
         {
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, radius, playerLayer);
-            Debug.Log("TiupanKilat mengesan " + hits.Length + " sebanyak " + damagePerTick);
 
             foreach (Collider2D hit in hits)
             {
+                // Guard: Damage kepada player
                 PlayerHealth playerHealth = hit.GetComponentInParent<PlayerHealth>();
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(damagePerTick);
-                    Debug.Log("Damage kilat kepada: " + hit.name);
                 }
 
-                PlayerMovement playerMovement = hit.GetComponentInParent<PlayerMovement>();
-                if (playerMovement != null)
+                // Guard: Stun player (guna PlayerStatus)
+                PlayerStatus playerStatus = hit.GetComponentInParent<PlayerStatus>();
+                if (playerStatus != null && !hasAppliedStun)
                 {
-                    StartCoroutine(StunPlayer(playerMovement, stunDuration));
+                    hasAppliedStun = true;
+                    playerStatus.ApplyStun(stunDuration);
                 }
             }
 
             yield return new WaitForSeconds(tickInterval);
             elapsed += tickInterval;
         }
-    }
-
-    IEnumerator StunPlayer(PlayerMovement playerMovement, float duration)
-    {
-        playerMovement.isStunned = true;
-        yield return new WaitForSeconds(stunDuration);
-        playerMovement.isStunned = false;
     }
 
     void OnDrawGizmosSelected()

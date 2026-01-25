@@ -16,6 +16,8 @@ public class DialogManager : MonoBehaviour
     private int currentLine;
     private bool isTyping = false;
 
+    public System.Action OnDialogSelesai;
+
     void Start()
     {
         if (dialogBox == null || DialogText == null || continueButton == null)
@@ -83,6 +85,8 @@ public class DialogManager : MonoBehaviour
             currentLine = 0;
             DialogText.text = "";
             Lines = null;
+
+            OnDialogSelesai?.Invoke();
         }
     }   
 }

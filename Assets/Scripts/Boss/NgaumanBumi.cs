@@ -25,12 +25,10 @@ public class NgaumanBumi : MonoBehaviour, IBossAttack
     {
         if (arahHadapan == null)
         {
-            Debug.LogWarning("arahHadapan tidak di jumpai");
             return;
         }
 
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, radius, playerLayer);
-        Debug.Log("Jumlah Collider dikesan oleh NgaumanBumi: " + hits.Length);
 
         HashSet<PlayerHealth> pemainSudahKena = new HashSet<PlayerHealth>();
 
@@ -43,11 +41,6 @@ public class NgaumanBumi : MonoBehaviour, IBossAttack
                 {
                     player.TakeDamage(damage);
                     pemainSudahKena.Add(player);
-                    Debug.Log("Damage dihantar kepada: " + hit.name + " sebanyak " + damage);
-                }
-                else
-                {
-                    Debug.Log("Player sudah kena damage, abaikan collider: " + hit.name);
                 }
             }
 
@@ -57,7 +50,6 @@ public class NgaumanBumi : MonoBehaviour, IBossAttack
                 Vector2 arahTolakan = (arahHadapan.position - transform.position).normalized;
                 Vector2 force = -arahTolakan * forceAmount;
                 rb.AddForce(force, ForceMode2D.Impulse);
-                Debug.Log("Tolakan aktif kepada: " + hit.name);
             }
         }
 

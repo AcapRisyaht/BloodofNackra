@@ -18,7 +18,6 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = maxHealth;
         healthBar.maxValue = 1; // Tetapkan nilai maksimum slider kepada 1
-        Debug.Log("Watak bermula dengan nyawa penuh: " + currentHealth);
         UpdateHealthBar();
     }
 
@@ -42,7 +41,6 @@ public class PlayerHealth : MonoBehaviour
         {
             float ratio = (float)currentHealth / (float)maxHealth;
             healthBar.value = ratio;
-            Debug.Log("UpdateHealthBar dipanggil. Ratio: " + (ratio * 100) + "%");
         }
            
     }
@@ -51,13 +49,11 @@ public class PlayerHealth : MonoBehaviour
     {
         if (Camera.main == null)
         {
-            Debug.LogWarning("Camera utama tidak di jumpai.");
             return;
         }
 
         if (textSpawnPoint == null)
         {
-            Debug.LogWarning("textSpawnPoint belum disambung.");
             return;
         }
 
@@ -68,7 +64,6 @@ public class PlayerHealth : MonoBehaviour
         FloatingTextUniversal ft = go.GetComponent<FloatingTextUniversal>();
         if (ft != null)
             ft.ShowDamage(amount, textSpawnPoint);
-        Debug.Log("Damage text muncul di: " + textSpawnPoint.position);
     } 
 
 
@@ -85,10 +80,28 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+    public void TambahHP(int amount)
+    {
+        currentHealth += amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        UpdateHealthBar();
+
+        // Optional: Tunjukkan teks terapung untuk penambahan nyawa
+        if (FloatingTextUniversal != null && textSpawnPoint != null)
+        {
+            Vector3 screenPosition = Camera.main.WorldToScreenPoint(textSpawnPoint.position);
+            GameObject go = Instantiate(FloatingTextUniversal, Vector3.zero, Quaternion.identity, canvasTransform);
+            go.GetComponent<RectTransform>().position = screenPosition;
+
+            FloatingTextUniversal ft = go.GetComponent<FloatingTextUniversal>();
+            if (ft != null)
+                ft.ShowDamage(-amount, textSpawnPoint);
+        }
+    }
+
     public void Respawn()
     {
         currentHealth = maxHealth;
         UpdateHealthBar();
-        Debug.Log("Watak respawn dengan nyawa penuh.");
     }
 }

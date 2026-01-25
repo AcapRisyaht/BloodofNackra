@@ -9,8 +9,8 @@ public class NPCDialogUI : MonoBehaviour
     public string[] dialogLines;
     public GameObject dialogBox;
     public TMP_Text dialogText;
-
     public Button continueButton; // Tombol untuk dialog
+    public KeyCode interactKey = KeyCode.F;
 
     private bool PlayerInRange = false;
 
@@ -22,11 +22,11 @@ public class NPCDialogUI : MonoBehaviour
 
     void Update()
     {
-        if (PlayerInRange && Input.GetKeyDown(KeyCode.E))
+        if (PlayerInRange && Input.GetKeyDown(interactKey))
         {
            DialogManager.Instance.ShowDialog(dialogLines);
-            }
         }
+    }
 
     void OnTriggerEnter2D(Collider2D other)
     {

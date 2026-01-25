@@ -24,11 +24,10 @@ public class CakarRuntuh : MonoBehaviour, IBossAttack
     {
         if (arahHadapan == null)
         {
-            Debug.LogWarning("arahHadapan tidak disambungkan ke CakarRuntuh!");
+           arahHadapan = transform;
         }
 
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, radius, playerLayer);
-        Debug.Log("Jumlah Collider dikesan oleh CakarRuntuh: " + hits.Length);
 
         HashSet<PlayerHealth> pemainSudahKena = new HashSet<PlayerHealth>();
 
@@ -44,11 +43,6 @@ public class CakarRuntuh : MonoBehaviour, IBossAttack
 
                     player.TakeDamage(finalDamage);
                     pemainSudahKena.Add(player);
-                    Debug.Log("Damage dihantar kepada: " + hit.name + " sebanyak " + damage);
-                }
-                else
-                {
-                    Debug.Log("Player sudah kena damage, abaikan collider: " + hit.name);
                 }
             }
 
@@ -58,7 +52,6 @@ public class CakarRuntuh : MonoBehaviour, IBossAttack
                 Vector2 arahTolakan = (transform.position - arahHadapan.position).normalized;
                 Vector2 force = arahTolakan * forceAmount;
                 rb.AddForce(force, ForceMode2D.Impulse);
-                Debug.Log("Tolakan aktif kepada: " + hit.name);
             }
         }
         Destroy(gameObject, 1f);

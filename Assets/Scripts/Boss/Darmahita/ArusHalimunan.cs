@@ -30,7 +30,6 @@ public class ArusHalimunan : MonoBehaviour, IBossAttack
     void Serang()
     {
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, radius, playerLayer);
-        Debug.Log("Jumlah Collider dikesan oleh ArusHalimunan: " + hits.Length);
 
         foreach (Collider2D hit in hits)
         {
@@ -38,7 +37,6 @@ public class ArusHalimunan : MonoBehaviour, IBossAttack
             if (player != null)
             {
                 player.TakeDamage(damage);
-                Debug.Log("Damage dihantar kepada: " + hit.name + " sebanyak " + damage);
             }
         }
         Destroy(gameObject, 1f);

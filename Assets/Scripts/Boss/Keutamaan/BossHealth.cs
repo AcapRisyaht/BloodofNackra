@@ -11,6 +11,7 @@ public class BossHealth : MonoBehaviour
     public GameObject FloatingTextUniversal;
     public Transform textSpawnPoint;
     public Transform canvasTransform;
+    public GameObject lootGeligaPrefab;
 
     public string namaUIBoss = "BarNyawaBoss"; // boleh override kalau perlu
     public static BossHealth currentBoss;
@@ -22,12 +23,9 @@ public class BossHealth : MonoBehaviour
     IEnumerator Start()
     {
         yield return null; // tunggu satu frame supaya semua GameObject siap
-        Debug.Log("Boss " + gameObject.name + " mula cari UI BarnyawaBoss");
 
         currentHealth = maxHealth;
         sr = GetComponent<SpriteRenderer>();
-
-        Debug.Log("Boss " + gameObject.name + " mula cari UI " + namaUIBoss);
 
         int retry = 0;
         while (bossHealthUI == null && retry < 30)
@@ -40,23 +38,15 @@ public class BossHealth : MonoBehaviour
 
         if (bossHealthUI == null)
         {
-            Debug.LogWarning("BarNyawaBoss gagal dijumpai oleh: " + gameObject.name);
             yield break; // hentikan Start() jika UI gagal dijumpai
         }
 
-        Debug.Log("BarNyawaBoss dijumpai oleh: " + gameObject.name);
         NyawaSlider = bossHealthUI.GetComponentInChildren<Slider>();
         bossHealthUI.SetActive(false);
 
         if (NyawaSlider != null)
         {
             NyawaSlider.value = 1f;
-
-        }
-                
-        else
-        {
-            Debug.Log("Slider dalam BarNyawaBoss tidak dijumpai oleh: " + gameObject.name);
         }
     }
     
@@ -89,7 +79,6 @@ public class BossHealth : MonoBehaviour
         if (isDead) return;
 
         currentHealth -= damage;
-        Debug.Log("Boss kena damage: " + damage + ", Nyawa sekarang: " + currentHealth);
 
         ShowFloatingText(damage, textSpawnPoint);
 
@@ -99,7 +88,6 @@ public class BossHealth : MonoBehaviour
         {
             float ratio = (float)currentHealth / maxHealth;
             NyawaSlider.value = ratio;
-            Debug.Log("Slider dikemaski: " + ratio);
         }
 
 
@@ -115,7 +103,6 @@ public class BossHealth : MonoBehaviour
     
      void ShowFloatingText(int amount, Transform spawnPoint)
     {
-        Debug.Log("ShowFloatingText dipanggil untuk: " + gameObject.name);
         if (Camera.main == null || canvasTransform == null || textSpawnPoint == null)
             return;
 
@@ -126,17 +113,13 @@ public class BossHealth : MonoBehaviour
 
         GameObject go = Instantiate(FloatingTextUniversal, Vector3.zero, Quaternion.identity, canvasTransform);
         go.GetComponent<RectTransform>().position = Camera.main.WorldToScreenPoint(spawnPosition);
-        Debug.Log("Prefab; " + FloatingTextUniversal.name);
-        Debug.Log("CanvasTransform: " + canvasTransform.name);
-        Debug.Log("SpawnPaosition: " + spawnPosition);
 
         FloatingTextUniversal ft = go.GetComponent<FloatingTextUniversal>();
         if (ft != null)
             ft.ShowDamage(amount, textSpawnPoint);
-        Debug.Log("Damage text muncul di: " + spawnPosition);
     }
 
-    void Die()
+    public void Die()
     {
         isDead = true;
         Debug.Log("Boss mati!");
@@ -151,6 +134,26 @@ public class BossHealth : MonoBehaviour
                 namaBoss.text = "";
             
             NyawaSlider.value = 0f;
+        }
+
+        if (lootGeligaPrefab != null)
+        {
+            GameObject loot = Instantiate(lootGeligaPrefab, transform.position, Quaternion.identity);
+            Debug.Log("Loot geliga muncul di " + loot.transform.position);
+        }
+
+        GameProgress gp = FindObjectOfType<GameProgress>();
+        if (gp != null)
+        {
+            gp.bossDefeated++;
+            Debug.Log("Jumlah bos defeated: " + gp.bossDefeated);
+            
+            // Update roda geliga ikut progress
+            RadialMenu rm = FindObjectOfType<RadialMenu>();
+            if (rm != null)
+            {
+                rm.UpdateGeligaSlots();
+            }
         }
 
         gameObject.SetActive(false);
@@ -176,12 +179,6 @@ public class BossHealth : MonoBehaviour
                     NyawaSlider.value = ratio;
                 }
             }
-
-            Debug.Log("UI boss diaktifkan: " + aktif + " oleh " + gameObject.name);
-        }
-        else
-        {
-            Debug.LogWarning("UI gagal diaktifkan oleh: " + gameObject.name);
         }
     } 
 
@@ -190,7 +187,6 @@ public class BossHealth : MonoBehaviour
         if (currentBoss == null && bossHealthUI != null)
         {
             bossHealthUI.SetActive(false);
-            Debug.Log("UI boss disembunyikan kerana tiada boss aktif.");
 
             Text namaBoss = bossHealthUI.GetComponentInChildren<Text>();
             if (namaBoss != null)
@@ -198,9 +194,6 @@ public class BossHealth : MonoBehaviour
 
             if (NyawaSlider != null)
                 NyawaSlider.value = 0f;
-
-            Debug.Log("UI boss dikosongkan kerana tiada boss aktif.");
-            
         }
     }
     

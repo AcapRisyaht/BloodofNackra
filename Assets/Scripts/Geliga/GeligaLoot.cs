@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 public class GeligaLoot : MonoBehaviour
 {
-    public GeligaKuasa dataGeliga;
+    public GeligaData dataGeliga;
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))

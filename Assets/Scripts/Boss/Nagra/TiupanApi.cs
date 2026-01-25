@@ -29,7 +29,6 @@ public class TiupanApi : MonoBehaviour, IBossAttack
         while (elapsed < totalDuration)
         {
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, radius, playerLayer);
-            Debug.Log("TiupanApi mengesan " + hits.Length + " sebanyak " + damagePerTick);
 
             foreach (Collider2D hit in hits )
             {

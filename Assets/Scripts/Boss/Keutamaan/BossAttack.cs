@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 
-
+/// <summary>
+/// DataSeranganIstimewa — Simpan nama + prefab serangan boss.
+/// Guard: Hanya data, tiada logik.
+/// </summary>
 [System.Serializable]
 public class DataSeranganIstimewa
 {
@@ -11,18 +13,22 @@ public class DataSeranganIstimewa
     public GameObject prefab;
 }
 
+/// <summary>
+/// BossAttack — Kawal serangan istimewa boss.
+/// Guard: Hanya logik serangan, bukan status player.
+/// </summary>
 public class BossAttack : MonoBehaviour
 {
     public List<DataSeranganIstimewa> senaraiSeranganIstimewa;
+
     public string namaSeranganAktif = "CakarRuntuh";
-   
     public Transform player;
     public Transform spawnPoint;
     public Transform arahHadapan;
 
     public float attackRange = 2f;
-    public float cooldown = 2f;
-    
+    public float cooldown = 4f; // Guard: panjangkan cooldown supaya bos tak spam
+
     private float lastAttackTime;
     private bool sedangMenyerang = false;
 
@@ -41,19 +47,13 @@ public class BossAttack : MonoBehaviour
 
     IEnumerator SeranganBerselang()
     {
-        // Bekukan player
-        PlayerMovement pc = player.GetComponent<PlayerMovement>();
-        if (pc != null)
-        {
-            pc.isStunned = true;
-            Debug.Log("Player dibekukan oleh Cakar Bertubi-tubi");
-        }
+        PlayerStatus ps = player.GetComponent<PlayerStatus>();
+        if (ps != null) ps.ApplyStun(0.5f); // Guard: stun lebih singkat
 
         yield return new WaitForSeconds(0.6f);
 
-        int jumlahSerangan = 3;
-        float selaAntaraCakar = 0.5f;
-
+        int jumlahSerangan = 2; // Guard: kurang serangan berturut-turut
+        float selaAntaraCakar = 1.0f; // Guard: lebih masa antara serangan
 
         for (int i = 0; i < jumlahSerangan; i++)
         {
@@ -61,25 +61,18 @@ public class BossAttack : MonoBehaviour
 
             if (prefabSerangan != null && spawnPoint != null)
             {
-               GameObject serangan = Instantiate(prefabSerangan, spawnPoint.position, Quaternion.identity);
+                GameObject serangan = Instantiate(prefabSerangan, spawnPoint.position, Quaternion.identity);
 
-               IBossAttack skrip = serangan.GetComponent<IBossAttack>();
-               if (skrip != null && arahHadapan != null)
-               {
-                   skrip.SetArah(arahHadapan);
-               }
-
-               Debug.Log("Boss mula serangan:" + namaSeranganAktif);
+                IBossAttack skrip = serangan.GetComponent<IBossAttack>();
+                if (skrip != null && arahHadapan != null)
+                {
+                    skrip.SetArah(arahHadapan);
+                }
             }
 
             yield return new WaitForSeconds(selaAntaraCakar);
         }
 
-        if (pc != null)
-        {
-            pc.isStunned = false;
-            Debug.Log("Player dibebaskan dari bekuan Cakar Bertubi-tubi");
-        }
-
+        sedangMenyerang = false; // Guard: reset supaya bos tunggu cooldown sebelum serangan seterusnya
     }
 }

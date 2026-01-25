@@ -47,7 +47,6 @@ public class KlonBayang : MonoBehaviour, IBossAttack
     void Serang()
     {
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, radius, playerLayer);
-        Debug.Log("Jumlah Collider dikesan oleh Attack_KlonBayang: " + hits.Length);
 
         foreach (Collider2D hit in hits)
         {
@@ -55,7 +54,6 @@ public class KlonBayang : MonoBehaviour, IBossAttack
             if (playerHealth != null)
             {
                 playerHealth.TakeDamage(damage);
-                Debug.Log("Damage dihantar kepada: " + hit.name + " sebanyak " + damage);
             }
         }
     }

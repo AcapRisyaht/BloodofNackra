@@ -1,26 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] public float moveSpeed = 5f;
-
-    public bool isStunned = false;
+    [SerializeField] private float baseMoveSpeed = 5f;
 
     private Rigidbody2D rb;
     private PlayerControls playControls;
     private Vector2 movement;
     private Animator myAnimator;
-    private Vector2 LastMoveDir;
-
-    private bool sedangSlow = false;
-
+    private PlayerStatus status; // rujuk status
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         myAnimator = GetComponent<Animator>();
+        status = GetComponent<PlayerStatus>();
     }
 
     void Awake()
@@ -50,31 +44,25 @@ public class PlayerMovement : MonoBehaviour
         movement = playControls.Movement.Move.ReadValue<Vector2>();
 
         bool isMoving = movement.sqrMagnitude > 0.01f;
-
         myAnimator.SetBool("IsMoving", isMoving);
 
         if (isMoving)
         {
-            // Update arah semasa (untuk Blend Tree)
             myAnimator.SetFloat("MoveX", movement.x);
             myAnimator.SetFloat("MoveY", movement.y);
-
-            // Simpan arah terakhir
             myAnimator.SetFloat("LastMoveX", movement.x > 0 ? 1 : (movement.x < 0 ? -1 : 0));
             myAnimator.SetFloat("LastMoveY", movement.y > 0 ? 1 : (movement.y < 0 ? -1 : 0));
         }
         else
         {
-            // Bila idle, tetapkan 0 pada MoveX & MoveY (supaya Blend Tree idle aktif)
             myAnimator.SetFloat("MoveX", 0);
             myAnimator.SetFloat("MoveY", 0);
         }
     }
 
-
     void FixedUpdate()
     {
-        if (isStunned)
+        if (status.isStunned)
         {
             rb.velocity = Vector2.zero;
             return;
@@ -82,41 +70,9 @@ public class PlayerMovement : MonoBehaviour
 
         if (movement.sqrMagnitude > 0.01f)
         {
-            rb.MovePosition(rb.position +movement * moveSpeed * Time.fixedDeltaTime);
+            float speed = baseMoveSpeed * status.GetSpeedFactor();
+            rb.MovePosition(rb.position + movement * speed * Time.fixedDeltaTime);
         }
-
-    }
-
-    private Vector2 SnapToFourDirections(Vector2 input)
-    {
-        if (Mathf.Abs(input.x) > Mathf.Abs(input.y))
-        {
-            return new Vector2(Mathf.Sign(input.x), 0);
-        }
-        else
-        {
-            return new Vector2(0, Mathf.Sign(input.y));
-        }
-    }
-
-    public void ApplySlow(float duration)
-    {
-        if (!sedangSlow)
-            StartCoroutine(SlowEffect(duration));
-    }
-
-    private IEnumerator SlowEffect(float duration)
-    {
-        sedangSlow = true;
-        float originalSpeed = moveSpeed;
-        moveSpeed *= 0.5f;
-        Debug.Log("Player dilambatkan!");
-
-        yield return new WaitForSeconds(duration);
-
-        moveSpeed = originalSpeed;
-        sedangSlow = false;
-        Debug.Log("Kelajuan player kembali normal.");
     }
 
     public void Knockback(Vector2 force)

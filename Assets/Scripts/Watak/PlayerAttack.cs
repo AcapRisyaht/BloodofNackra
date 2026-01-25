@@ -1,25 +1,46 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class PlayerAttack : MonoBehaviour
 {
+    public float attackRange = 0.5f;
+    public float parryDuration = 0.3f;
+
+    public bool isParrying = false;
+    public bool isMoving = false; // Tambah ini untuk cek apakah player sedang bergerak
+
     public Animator animator;
     public Transform attackPoint;
-    public float attackRange = 0.5f;
     public LayerMask enemyLayers;
-    public bool isParrying = false;
-    public float parryDuration = 0.3f;
-    private PlayerControls playControls;
     public GameObject attackHitBox; // Untuk aktivkan hitbox
-    public bool isMoving = false; // Tambah ini untuk cek apakah player sedang bergerak
     public Vector2 LastMoveDir = Vector2.right; // Arah hadap terakhir, default ke kanan
+    public PlayerInventory PlayerInventory;
+    public ItemData pedangBiasa;
+    public ItemData pedangDarahKirmizi;
+
     public int attackDamage = 20;
-    public BossZoneTrigger bossZoneTrigger;
     public int maxHealth = 100;
     public int currentHealth = 100;
+
+    private PlayerControls playControls;
+
+    void Start()
+    {
+        if (PlayerInventory != null && pedangBiasa != null)
+        {
+            PlayerInventory.AddItem(pedangBiasa, 1);
+        }
+    }
+
+    public void UnlockPedangDarahKirmizi()
+    {
+        if (PlayerInventory != null && pedangDarahKirmizi != null)
+        {
+            PlayerInventory.AddItem(pedangDarahKirmizi, 1);
+            Debug.Log("Pedang Darah Kirmizi telah dibuka kuncinya dan ditambah ke inventori.");
+        }
+    }
 
     void Awake()
     {
@@ -29,89 +50,165 @@ public class PlayerAttack : MonoBehaviour
     void OnEnable()
     {
         playControls.Enable();
-        playControls.Combat.Attack.performed += OnAttack;
 
-        playControls.Movement.Move.performed += ctx =>
-        {
-            Vector2 input = ctx.ReadValue<Vector2>();
-            isMoving = input != Vector2.zero;
-            if (isMoving)
+        playControls.Combat.Attack.performed += OnAttackFizikal;
 
-                LastMoveDir = input;
+        playControls.Combat.OpenWheel.performed += OnOpenWheel;
 
-        };
+        playControls.Combat.UseGeliga.performed +=  OnUseGeliga;
 
-        playControls.Movement.Move.canceled += ctx => isMoving = false;
+
+        playControls.Movement.Move.performed += OnMovePerformed;
+        playControls.Movement.Move.canceled += OnMoveCanceled;
+
     }
 
     void OnDisable()
     {
-        playControls.Combat.Attack.performed -= OnAttack;
+        playControls.Combat.Attack.performed -= OnAttackFizikal;
+ 
+        playControls.Combat.OpenWheel.performed -= OnOpenWheel;
 
-        playControls.Movement.Move.performed -= ctx => isMoving = ctx.ReadValue<Vector2>() != Vector2.zero;
-        playControls.Movement.Move.canceled -= ctx => isMoving = false;
+        playControls.Combat.UseGeliga.performed -= OnUseGeliga;
 
+
+        playControls.Movement.Move.performed -= OnMovePerformed;
+        playControls.Movement.Move.canceled -= OnMoveCanceled;
+
+       
         playControls.Disable();
     }
 
+    // Serangan biasa (tetikus kiri)
+    private void OnAttackFizikal(InputAction.CallbackContext ctx)
+    {
+        if (isMoving) return;
+
+        KuasaPemain kuasa = GetComponent<KuasaPemain>();
+        if (kuasa == null) return;
+
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayers);
+        if (hitEnemies == null || hitEnemies.Length == 0) return;
+
+        // Kalau tiada elemen aktif, fallback serangan biasa
+        if (kuasa.elemenAktif == JenisGeliga.None) // atau enum default awak
+        {
+            foreach (Collider2D enemy in hitEnemies)
+                SeranganBiasa(enemy);
+            return;
+        }
+
+        // Serangan elemen
+        foreach (Collider2D enemy in hitEnemies)
+        {
+            Target target = enemy.GetComponentInParent<Target>();
+            if (target != null)
+            {
+                int geligaDamage = kuasa.KiraDamage(attackDamage);
+                target.TerimaSerangan(kuasa.elemenAktif, geligaDamage);
+                Debug.Log("Serangan elemen: " + kuasa.elemenAktif);
+            }
+            else
+            {
+                SeranganBiasa(enemy);
+            }
+        }
+    }
+
+    private void SeranganBiasa(Collider2D enemy = null)
+    {
+        if (enemy == null) return;
+
+        int attackDamage = PlayerInventory.CountItem(pedangDarahKirmizi) > 0 ?
+                           pedangDarahKirmizi.damageSenjata :
+                           pedangBiasa.damageSenjata;
+
+        EnemyHealth enemyHealth = enemy.GetComponentInParent<EnemyHealth>();
+        if (enemyHealth != null) enemyHealth.TakeDamage(attackDamage);
+
+        BossHealth bossHealth = enemy.GetComponentInParent<BossHealth>();
+        if (bossHealth != null) bossHealth.TakeDamage(attackDamage);
+    }
+
+    private void SenjataBiasa()
+    {
+        if (PlayerInventory != null && pedangBiasa != null)
+        {
+            PlayerInventory.pedangBiasa(pedangBiasa);
+            Debug.Log("Pedang Biasa ditambah ke inventori.");
+        }
+        else
+        {
+            Debug.LogWarning("Inventori pemain atau data pedang biasa tiada.");
+        }
+        
+    }
+
+    private void SenjataDarahKirmizi()
+    {
+        if (PlayerInventory != null && pedangDarahKirmizi != null)
+        {
+            PlayerInventory.pedangDarahKirmizi(pedangDarahKirmizi);
+            Debug.Log("Pedang Darah Kirmizi ditambah ke inventori.");
+        }
+        else
+        {
+            Debug.LogWarning("Inventori pemain atau data pedang darah kirmizi tiada.");
+        }
+    }
+
+    // Guna Geliga (E)
+    private void OnUseGeliga(InputAction.CallbackContext ctx)
+    {
+        KuasaPemain kuasa = GetComponent<KuasaPemain>();
+        if (kuasa == null || kuasa.radialMenu == null || kuasa.inventory == null || kuasa.inventory.slots == null)
+        {
+            Debug.LogWarning("Komponen KuasaPemain / radialMenu / inventory / slots tiada.");
+            return;
+        }
+
+        int index = kuasa.radialMenu.slotAktif;
+        if (index < 0 || index >= kuasa.inventory.slots.Length)
+        {
+            Debug.Log("Index geliga tidak sah. Abaikan penggunaan geliga.");
+            return;
+        }
+
+        GeligaData dipilih = kuasa.inventory.slots[index];
+        if (dipilih == null)
+        {
+            Debug.Log("Slot geliga kosong. Abaikan penggunaan geliga.");
+            return;
+        }
+        
+        kuasa.AktifkanGeliga(dipilih);
+    }
+
+    // Buka/tutup roda (Q)
+    private void OnOpenWheel(InputAction.CallbackContext ctx)
+    {
+        KuasaPemain kp = GetComponent<KuasaPemain>();
+        if (kp == null || kp.radialMenu == null)
+            return;
+        
+        RadialMenu menu = kp.radialMenu;
+        bool newState = !menu.gameObject.activeSelf;
+        menu.gameObject.SetActive(newState);
+    }
+
+    private void OnMovePerformed(InputAction.CallbackContext ctx)
+    {
+        Vector2 input = ctx.ReadValue<Vector2>();
+        isMoving = input != Vector2.zero;
+        if (isMoving) LastMoveDir = input;
+    }
+
+    private void OnMoveCanceled(InputAction.CallbackContext ctx) => isMoving = false;
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.K))
         {
             StartCoroutine(ParryWindow());
-        }
-    }
-
-    private void OnAttack(InputAction.CallbackContext ctx)
-    {
-        if (isMoving)
-        {
-            Debug.Log("Can't attack while moving");
-            return;
-        }
-        Debug.Log("Player Attack");
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayers);
-
-        // Ambil arah hadap pemain
-        Vector2 facingDir = transform.right; // Assuming right is the facing direction
-        if (facingDir == Vector2.zero)
-            facingDir = Vector2.right; // Default facing direction
-
-        HashSet<GameObject> processedEnemies = new HashSet<GameObject>();
-
-        foreach (Collider2D enemy in hitEnemies)
-        {
-            Debug.Log("Collider dijumpai: " + enemy.name);
-
-
-            GameObject enemyObj = enemy.GetComponentInParent<EnemyHealth>()?.gameObject ?? enemy.gameObject;
-
-
-
-            if (processedEnemies.Contains(enemyObj))
-                continue;
-
-            processedEnemies.Add(enemyObj);
-
-            Vector2 enemyDir = ((Vector2)enemy.transform.position - (Vector2)transform.position).normalized;
-            float dot = Vector2.Dot(LastMoveDir.normalized, enemyDir);
-
-            if (dot > 0.7) // Musuh berada di depan pemain
-            {
-                EnemyHealth enemyHealth = enemyObj.GetComponent<EnemyHealth>();
-                
-                if (enemyHealth != null)
-                {
-                    enemyHealth.TakeDamage(attackDamage);
-                }
-
-                BossHealth bossHealth = enemy.GetComponentInParent<BossHealth>();
-                if (bossHealth != null)
-                {
-                    Debug.Log("BossHealth dijumpai" + bossHealth.name);
-                    bossHealth.TakeDamage(attackDamage);
-                }
-            }
         }
     }
 
