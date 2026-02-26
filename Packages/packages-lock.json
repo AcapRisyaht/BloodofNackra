@@ -542,5 +542,7 @@
         "com.unity.modules.subsystems": "1.0.0"
       }
     }
-  }
+  },
+  "projectName": "BloodofNackra",
+  "lockVersion": "1.0.1"
 }
