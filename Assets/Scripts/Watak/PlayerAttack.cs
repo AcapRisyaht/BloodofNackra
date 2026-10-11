@@ -11,26 +11,37 @@ public class PlayerAttack : MonoBehaviour
     public bool isMoving = false; // Tambah ini untuk cek apakah player sedang bergerak
 
     public Animator animator;
+    public Animator pedangAnimator; // Animator untuk pedang
+    public GameObject pedangPrefab;
     public Transform attackPoint;
     public LayerMask enemyLayers;
-    public GameObject attackHitBox; // Untuk aktivkan hitbox
-    public Vector2 LastMoveDir = Vector2.right; // Arah hadap terakhir, default ke kanan
     public PlayerInventory PlayerInventory;
     public ItemData pedangBiasa;
     public ItemData pedangDarahKirmizi;
+    public Vector2 LastMoveDir = Vector2.zero; // Default arah terakhir adalah diam (0,0)
+    public CameraShake cameraShake; // Referensi ke skrip CameraShake 
 
     public int attackDamage = 20;
     public int maxHealth = 100;
     public int currentHealth = 100;
 
     private PlayerControls playControls;
+    private WeaponActions weapon;
 
     void Start()
     {
-        if (PlayerInventory != null && pedangBiasa != null)
         {
-            PlayerInventory.AddItem(pedangBiasa, 1);
+            EquipPedang(pedangPrefab, transform.Find("HandSlotDown"));
+
+            if (PlayerInventory != null && pedangBiasa != null)
+            {
+                 PlayerInventory.AddItem(pedangBiasa, 1);
+            }
+
+             weapon = GetComponentInChildren<WeaponActions>();
+
         }
+     
     }
 
     public void UnlockPedangDarahKirmizi()
@@ -80,54 +91,91 @@ public class PlayerAttack : MonoBehaviour
     }
 
     // Serangan biasa (tetikus kiri)
+    // Dalam OnAttackFizikal
     private void OnAttackFizikal(InputAction.CallbackContext ctx)
     {
-        if (isMoving) return;
+      // fallback arah default kalau player diam
+      if (LastMoveDir == Vector2.zero)
+        LastMoveDir = new Vector2(0, -1); // Default arah ke bawah
 
+      // Trigger Player Animator
+      animator.SetFloat("AttackX", LastMoveDir.x);
+      animator.SetFloat("AttackY", LastMoveDir.y);
+      animator.SetTrigger("Attack");
+
+      // Trigger Pedang Animator (serupa dengan toolAnimator sebelum ni)
+      if (pedangAnimator != null)
+        {
+        int x = Mathf.RoundToInt(LastMoveDir.x);
+        int y = Mathf.RoundToInt(LastMoveDir.y);
+
+        if (x == 0 && y == -1) pedangAnimator.SetTrigger("doActionDown");
+        else if (x == 0 && y == 1) pedangAnimator.SetTrigger("doActionUp");
+        else if (x == -1 && y == 0) pedangAnimator.SetTrigger("doActionLeft");
+        else if (x == 1 && y == 0) pedangAnimator.SetTrigger("doActionRight");
+        else pedangAnimator.ResetTrigger("doActionDown");
+        }
+
+        // Damage logic kekal sama
         KuasaPemain kuasa = GetComponent<KuasaPemain>();
         if (kuasa == null) return;
 
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayers);
         if (hitEnemies == null || hitEnemies.Length == 0) return;
 
-        // Kalau tiada elemen aktif, fallback serangan biasa
-        if (kuasa.elemenAktif == JenisGeliga.None) // atau enum default awak
-        {
-            foreach (Collider2D enemy in hitEnemies)
-                SeranganBiasa(enemy);
-            return;
-        }
+        if (kuasa.elemenAktif == JenisGeliga.None)
+         {
+          foreach (Collider2D enemy in hitEnemies)
+         {
+            Dummy dummy = enemy.GetComponentInParent<Dummy>();
+            if (dummy != null)
+            {
+                dummy.TakeHit(transform);
+                continue; // Teruskan ke musuh seterusnya jika ini adalah Dummy
+            }
 
-        // Serangan elemen
+            weapon.DoNormalAttack(enemy);
+
+            // Tambah gegaran untuk serangan biasa juga
+            if (cameraShake != null)
+            {
+                StartCoroutine(cameraShake.Shake(0.1f, 0.1f)); // Contoh gegaran untuk serangan biasa
+            }
+         }
+        return;
+        } 
+
         foreach (Collider2D enemy in hitEnemies)
         {
-            Target target = enemy.GetComponentInParent<Target>();
-            if (target != null)
-            {
-                int geligaDamage = kuasa.KiraDamage(attackDamage);
-                target.TerimaSerangan(kuasa.elemenAktif, geligaDamage);
-                Debug.Log("Serangan elemen: " + kuasa.elemenAktif);
-            }
-            else
-            {
-                SeranganBiasa(enemy);
-            }
-        }
+        Target target = enemy.GetComponentInParent<Target>();
+        if (target != null)
+          {
+            int geligaDamage = kuasa.KiraDamage(attackDamage);
+            target.TerimaSerangan(kuasa.elemenAktif, geligaDamage);
+            Debug.Log("Serangan elemen: " + kuasa.elemenAktif);
+          }
+       }
     }
 
-    private void SeranganBiasa(Collider2D enemy = null)
+    public void EquipPedang(GameObject pedangPrefab, Transform handSlot)
     {
-        if (enemy == null) return;
+        foreach (Transform child in handSlot)
+        {
+            Destroy(child.gameObject);
+        }
 
-        int attackDamage = PlayerInventory.CountItem(pedangDarahKirmizi) > 0 ?
-                           pedangDarahKirmizi.damageSenjata :
-                           pedangBiasa.damageSenjata;
+        GameObject pedangBaru = Instantiate(pedangPrefab, handSlot);
+        pedangBaru.transform.localPosition = Vector3.zero;
+        pedangBaru.transform.localRotation = Quaternion.identity;
 
-        EnemyHealth enemyHealth = enemy.GetComponentInParent<EnemyHealth>();
-        if (enemyHealth != null) enemyHealth.TakeDamage(attackDamage);
+        pedangAnimator = pedangBaru.GetComponent<Animator>();
 
-        BossHealth bossHealth = enemy.GetComponentInParent<BossHealth>();
-        if (bossHealth != null) bossHealth.TakeDamage(attackDamage);
+        if (pedangAnimator != null)
+            Debug.Log("PedangAnimator dijumpai: " + pedangAnimator.runtimeAnimatorController.name);
+        
+        else
+            Debug.LogWarning("PedangAnimator belum dijumpai! Pasti prefab ada komponen Animator.");
+    
     }
 
     private void SenjataBiasa()
@@ -200,10 +248,22 @@ public class PlayerAttack : MonoBehaviour
     {
         Vector2 input = ctx.ReadValue<Vector2>();
         isMoving = input != Vector2.zero;
-        if (isMoving) LastMoveDir = input;
+        
+        if (input != Vector2.zero)
+        {
+            // Tentukan arah terakhir berdasarkan input
+            if (Mathf.Abs(input.x) > Mathf.Abs(input.y))
+                LastMoveDir = new Vector2(Mathf.Sign(input.x), 0); // Horizontal
+            
+            else
+                LastMoveDir = new Vector2(0, Mathf.Sign(input.y)); // Vertical
+        }
     }
 
-    private void OnMoveCanceled(InputAction.CallbackContext ctx) => isMoving = false;
+    private void OnMoveCanceled(InputAction.CallbackContext ctx)
+    {
+        isMoving = false;
+    } 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.K))
@@ -237,11 +297,6 @@ public class PlayerAttack : MonoBehaviour
         Debug.Log($"Damage taken: {damage}");
     }
 
-    void DisableHitBox()
-    {
-        attackHitBox.SetActive(false);
-    }
-
     private IEnumerator ResetColor(SpriteRenderer enemySprite)
     {
         yield return new WaitForSeconds(0.2f);
@@ -268,5 +323,17 @@ public class PlayerAttack : MonoBehaviour
             return;
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(attackPoint.position, attackRange);
+    }
+
+    public void EnableHitBox()
+    {
+        if (weapon != null)
+            weapon.EnableHitBox();
+    }
+
+    public void DisableHitBox()
+    {
+        if (weapon != null)
+            weapon.DisableHitBox();
     }
 }

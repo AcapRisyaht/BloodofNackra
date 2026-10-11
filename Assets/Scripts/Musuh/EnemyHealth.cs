@@ -1,10 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.XR;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class EnemyHealth : MonoBehaviour
+public class EnemyHealth : MonoBehaviour, IDamageable
 {
     private SpriteRenderer spriteRenderer;
     public Color flashColor = Color.red;
@@ -25,7 +23,7 @@ public class EnemyHealth : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         originalColor = spriteRenderer.color;
         GameObject barClone = Instantiate(BarNyawaPrefab, transform);
-        barClone.transform.localPosition = new Vector3(0, 2f, 0.1f); // Letak bar di atas musuh
+        
 
         nyawaSlider = barClone.GetComponentInChildren<Slider>();
         nyawaSlider.maxValue = maxHealth;
@@ -37,7 +35,7 @@ public class EnemyHealth : MonoBehaviour
     {
         return currentHealth;
     }
-
+    
     public void TakeDamage(int damage)
     {
         if (isDead) return;
@@ -56,6 +54,22 @@ public class EnemyHealth : MonoBehaviour
 
         float healthPercent = (float)currentHealth / (float)maxHealth;
         SetHealth(healthPercent);
+        
+        // KnockBack musuh bila kena damage
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        EnemyMovement move = GetComponent<EnemyMovement>();
+        if (rb != null && move != null)
+        {
+            // Cari player untuk arah knockback
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                Vector2 knockbackDir = (transform.position - player.transform.position).normalized;
+                rb.velocity = knockbackDir * 0.5f; // Tetapkan kelajuan knockback
+                move.isKnockbacked = true;
+                move.KnockbackTimer = 0.5f; // Tetapkan masa knockback 
+            }
+        }
 
         if (currentHealth <= 0)
         {

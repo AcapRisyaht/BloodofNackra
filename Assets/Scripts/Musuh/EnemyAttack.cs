@@ -1,8 +1,5 @@
 using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class EnemyAttack : MonoBehaviour
 {
@@ -12,15 +9,29 @@ public class EnemyAttack : MonoBehaviour
     private bool canAttack = true;
     public float attackRange  = 5f;
     public int attackDamage = 10; // Tambah nilai damage
+    private Animator animator;
+    private bool hasHit;
 
     void Start()
     {
-        if (movement == null)
-            Debug.LogError("movement belum disambung!");
+        animator = GetComponent<Animator>();
+
+       if (movement == null)
+        {
+            movement = GetComponent<EnemyMovement>();
+        }
+
+        if (Player == null)
+        {
+           GameObject playerObj = GameObject.FindWithTag("Player");
+           if (playerObj != null)
+               Player = playerObj.transform;
+        }
     }
 
     void Update()
     {
+
         if (movement == null || Player == null)
         {
             Debug.LogWarning("movement atau player belum di sambungkan!");
@@ -46,23 +57,19 @@ public class EnemyAttack : MonoBehaviour
                     return;
                 }
 
-                PlayerHealth playerHealth = Player.GetComponent<PlayerHealth>();
-                if (playerHealth != null)
-                {
-                    playerHealth.TakeDamage(attackDamage);
-                    Debug.Log("Pemain kena serangan! -" + attackDamage );
-                }
+                Vector2 dirToPlayer = (Player.position - transform.position).normalized;
 
-                SpriteRenderer sr = Player.GetComponent<SpriteRenderer>();
-                if (sr != null)
-                {
-                    sr.color = Color.red;
-                    StartCoroutine(ResetPlayerColor(sr));
-                    Debug.Log("Pemain kena serangan!");
-                }
+                movement.LastMoveDir = dirToPlayer;
+
+                animator.SetFloat("AttackX", dirToPlayer.x);
+
+                animator.SetFloat("AttackY", dirToPlayer.y);
+
+                animator.SetTrigger("Attack");
 
                 canAttack = false;
-                Invoke(nameof(ResetAttack), attackCooldown);
+                hasHit = false; // Reset hasHit sebelum serangan baru
+                StartCoroutine(AttackCooldown());
             }
             else
             {
@@ -71,8 +78,9 @@ public class EnemyAttack : MonoBehaviour
         }
     }
 
-    void ResetAttack()
+    IEnumerator AttackCooldown()
     {
+        yield return new WaitForSeconds(attackCooldown);
         canAttack = true;
     }
 
@@ -80,5 +88,25 @@ public class EnemyAttack : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
         sr.color = Color.white;
+    }
+
+    public void DoDamage()
+    {
+        if (Player == null || hasHit) return;
+        {
+            PlayerHealth playerHealth = Player.GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(attackDamage);
+                hasHit = true; // damage sekali sahaja per serangan
+            
+                //Gegaran kamera bila musuh serang Player
+                CameraShake cameraShake = Camera.main.GetComponent<CameraShake>();
+                if (cameraShake != null)
+                {
+                    StartCoroutine(cameraShake.Shake(0.1f, 0.1f));
+                }
+            }
+        }
     }
 }

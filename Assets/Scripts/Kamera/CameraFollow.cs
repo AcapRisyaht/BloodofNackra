@@ -11,8 +11,12 @@ public class CameraFollow : MonoBehaviour
     public Vector2 minBounds;
     public Vector2 maxBounds;
 
+    public bool isShaking = false; // Flag untuk menandai apakah kamera sedang shake
+    
     void LateUpdate()
     {
+        if (isShaking) return; // Jangan ikuti target saat kamera sedang shake      
+
         Vector3 desiredPosition = target.position + offset;
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
         

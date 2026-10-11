@@ -20,7 +20,7 @@ TagManager:
   - Boss
   - TriggerZone
   - Background
-  - 
+  - Foreground
   - 
   - 
   - 
@@ -44,27 +44,33 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: Player
-    uniqueID: 1332756831
+  - name: Bawah
+    uniqueID: 816791409
     locked: 0
-  - name: Enemy
-    uniqueID: 1245045487
+  - name: Dunia
+    uniqueID: 3281383239
     locked: 0
-  - name: Background
-    uniqueID: 20855289
+  - name: Senjata
+    uniqueID: 2240333353
     locked: 0
-  - name: Foreground
-    uniqueID: 1954490881
-    locked: 0
-  - name: UI
-    uniqueID: 1187678805
+  - name: Atas
+    uniqueID: 2921678367
     locked: 0
   - name: Boss
     uniqueID: 423014213
     locked: 0
+  - name: NPC
+    uniqueID: 3824830943
+    locked: 0
+  - name: UI
+    uniqueID: 1187678805
+    locked: 0
   - name: Geliga
     uniqueID: 2988970015
     locked: 0
-  - name: NPC
-    uniqueID: 3824830943
+  - name: Peralatan
+    uniqueID: 2628240489
+    locked: 0
+  - name: Efek
+    uniqueID: 688618811
     locked: 0

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Boneka
   m_EditorClassIdentifier: 
   enemyName: 
-  sprite: {fileID: 503590250, guid: 7e600562871410345af2c7c216cfa156, type: 3}
-  animator: {fileID: 0}
-  maxHealth: 0
-  damageColor: {r: 0, g: 0, b: 0, a: 0}
+  sprite: {fileID: 840009898, guid: c1de941b8eab0ed4e8d8e2ea7e2c63ca, type: 3}
+  animator: {fileID: 9100000, guid: 7b912b452f3680348a85742349fd4055, type: 2}
+  maxHealth: 100
+  damageColor: {r: 1, g: 0, b: 0, a: 0}

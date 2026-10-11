@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 15a87dad7a29b81489c90e89ca81aab2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - sumberBunyi: {instanceID: 0}
+  - tapakkaki: {fileID: 8300000, guid: fc24c548ec5eba840a4fa2b4bfcce431, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
